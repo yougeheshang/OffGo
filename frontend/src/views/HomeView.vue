@@ -55,7 +55,6 @@ const navigateToPlan = (cardId: number) => {
           placeholder="搜索旅游目的地..."
           v-model="searchKeyword"
         >
-        <button @click="handleSearch">搜索</button>
       </div>
       <div class="user-avatar">[AVATAR]</div>
     </header>
@@ -112,15 +111,6 @@ const navigateToPlan = (cardId: number) => {
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 24px;
-  }
-
-  button {
-    padding: 12px 24px;
-    background: #f5f5f5;
-    color: white;
-    border: none;
-    border-radius: 24px;
-    cursor: pointer;
   }
 }
 

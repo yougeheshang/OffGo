@@ -36,10 +36,17 @@ const navItems: NavItem[] = [
 
 <template>
   <nav class="vertical-nav">
-    <div class="nav-logo">
-      [LOGO]
-    </div>
-    <!-- 导航项 -->
+    <el-tooltip
+      effect="light"
+      placement="right-start"
+      :show-arrow="false"
+      :enterable="false"
+      content="OffGo"
+    >
+      <router-link to="/" class="nav-logo">
+        <img alt="logo" src="@/assets/OffGo_logo.svg" height="48" width="48" />
+      </router-link>
+    </el-tooltip>
     <router-link
       v-for="item in navItems"
       :key="item.name"
@@ -77,13 +84,23 @@ const navItems: NavItem[] = [
   border-right: 1px solid 		#DCDCDC;
 }
 
+.nav-logo{
+  transition: all 0.3s;
+  width: 48px;
+  height: 48px;
+  &:hover{
+    transform: scale(1.1);
+  }
+}
+
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   color: 	#A9A9A9;
   text-decoration: none;
-  padding: 12px;
+  padding: 8px;
+  margin: 4px;
   transition: all 0.3s;
 
   &:hover {
@@ -96,7 +113,8 @@ const navItems: NavItem[] = [
 }
 
 .icon-placeholder {
-  font-size: 24px;
-  margin-bottom: 8px;
+  height: 32px;
+  width: 32px;
 }
+
 </style>
