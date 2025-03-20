@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElTooltip } from 'element-plus';
+// import { ElTooltip } from 'element-plus';
 interface NavItem {
   name: string
   path: string

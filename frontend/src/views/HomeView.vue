@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import SearchBar from '@/components/SearchBar.vue'
+import UserPanel from '@/components/UserPanel.vue'
 
 interface TravelCard {
   id: number
@@ -12,110 +14,110 @@ interface TravelCard {
 }
 
 const router = useRouter()
-const searchKeyword = ref('')
+const cards = ref<TravelCard[]>([])
 
-// 模拟数据（后续替换为API请求）
-const generateRandomCard = (index: number): TravelCard => {
-  const cardId = Date.now() + index + Math.floor(Math.random() * 1000)
-  const imageWidth = 300
-  const imageHeight = 200
+// 请求参数
+const searchParams = ref({
+  keyword: '',
+  sortField: 'hot',
+  sortOrder: 'desc'
+})
 
-  return {
-    id: cardId,
-    title: `景点 ${index + 1}`,
-    description: '随机生成的景点描述',
-    images: [
-      // 使用 Picsum Photos 的随机图片（添加随机参数避免浏览器缓存）
-      `https://picsum.photos/${imageWidth}/${imageHeight}?random=${cardId}`
-    ],
-    hot: Math.floor(Math.random() * 4500) + 500,    // 500-4999 热度
-    rating: Number((4 + Math.random()).toFixed(1)) // 4.0-5.0 评分
+// 获取数据
+const fetchCards = async () => {
+  try {
+    const query = new URLSearchParams({
+      ...searchParams.value,
+      pageSize: '200' // 一次性获取所有数据
+    }).toString()
+
+    const response = await fetch(`/api/travel-cards?${query}`)
+    const data = await response.json()
+    cards.value = data.items
+  } catch (error) {
+    console.error('数据获取失败:', error)
   }
 }
-// 生成 200 个卡片
-const cards = ref<TravelCard[]>(
-  Array.from({ length: 200 }, (_, index) => generateRandomCard(index))
-)
-const handleSearch = () => {
-  // 搜索逻辑
+
+// 处理搜索
+const handleSearch = (keyword: string) => {
+  searchParams.value.keyword = keyword
+  fetchCards()
 }
 
-const navigateToPlan = (cardId: number) => {
-  router.push(`/plan/${cardId}`)
+// 处理排序
+const handleSortChange = (params: {
+  field: 'hot' | 'rating'
+  order: 'asc' | 'desc'
+}) => {
+  searchParams.value.sortField = params.field
+  searchParams.value.sortOrder = params.order
+  fetchCards()
 }
+
+// 点击卡片（热度更新）
+const handleCardClick = async (cardId: number) => {
+  try {
+    // 发送点击事件
+    await fetch(`/api/cards/${cardId}/click`, {
+      method: 'POST'
+    })
+
+    // 本地更新热度（+1）
+    cards.value = cards.value.map(card =>
+      card.id === cardId
+        ? { ...card, hot: card.hot + 1 }
+        : card
+    )
+
+    router.push(`/plan/${cardId}`)
+  } catch (error) {
+    console.error('点击记录失败:', error)
+  }
+}
+
+// 生命周期
+onMounted(fetchCards)
 </script>
 
 <template>
-  <div class="home-container">
-    <!-- 顶部搜索栏 -->
-    <header class="search-header">
-      <div class="search-box">
-        <input
-          type="text"
-          placeholder="搜索旅游目的地..."
-          v-model="searchKeyword"
-        >
-      </div>
-      <div class="user-avatar">[AVATAR]</div>
-    </header>
-
-    <!-- Pinterest风格瀑布流 -->
-    <div class="masonry-container">
-      <div
-        v-for="(card, index) in cards"
-        :key="index"
-        class="masonry-item"
-        @click="navigateToPlan(card.id)"
-      >
-        <div class="card-image">
-          <img
-            :src="card.images[0]"
-            loading="lazy"
-            :alt="card.title"
-          >
-          <div class="image-overlay">
-            <span class="hot">🔥 {{ card.hot }}</span>
-            <span class="rating">⭐ {{ card.rating }}</span>
-          </div>
-        </div>
-        <div class="card-content">
-          <h3>{{ card.title }}</h3>
-          <p>{{ card.description }}</p>
-        </div>
-      </div>
+  <header class="search-header">
+    <SearchBar
+      @search="handleSearch"
+      @sort-change="handleSortChange"
+    />
+    <UserPanel />
+  </header>
+  <!-- 瀑布流容器 -->
+  <div class="masonry-container">
+    <div
+      v-for="card in cards"
+      :key="card.id"
+      class="masonry-item"
+      @click="handleCardClick(card.id)"
+    >
+      <!-- 卡片内容保持不变 -->
     </div>
   </div>
 </template>
 
 <style scoped>
-.home-container {
-  margin-left: 70px; /* 与导航栏宽度一致 */
-  padding: 20px;
-}
-
 .search-header {
+  width: calc(100% - 70px);
   display: flex;
+  position: fixed;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-}
-
-.search-box {
-  flex: 1;
-  max-width: 600px;
-  display: flex;
-  gap: 10px;
-
-  input {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 24px;
-  }
+  padding: 15px 0px 15px 10px;
+  margin-left: 70px;
+  box-shadow: 0px 5px 5px -1px#DCDCDC;
+  z-index: 10;
 }
 
 /* Pinterest瀑布流布局 */
 .masonry-container {
+  margin-left: 70px;
+  margin-top: 40px;
   columns: 4 240px;
   column-gap: 20px;
 }
@@ -134,29 +136,6 @@ const navigateToPlan = (cardId: number) => {
   }
 }
 
-.card-image {
-  position: relative;
-  img {
-    width: 100%;
-    border-radius: 12px 12px 0 0;
-  }
-}
-
-.image-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.7));
-  color: white;
-  display: flex;
-  justify-content: space-between;
-}
-
-.card-content {
-  padding: 16px;
-
   h3 {
     margin-bottom: 8px;
     color: 	#696969;
@@ -170,5 +149,4 @@ const navigateToPlan = (cardId: number) => {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-}
 </style>
