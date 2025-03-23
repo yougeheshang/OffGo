@@ -15,6 +15,12 @@ const router = createRouter({
       component: () => import('@/views/DiaryView.vue') // 待开发
     },
     {
+      path: '/diary/:id',
+      name: 'diaryDetail',
+      component: () => import('@/views/diaryID.vue'),
+      props: true,
+    },
+    {
       path: '/plan',
       name: 'plan',
       component: () => import('@/views/PlanView.vue'), // 待开发
