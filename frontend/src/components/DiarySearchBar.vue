@@ -1,11 +1,13 @@
 <template>
   <div class="diary-search-bar">
-    <input
-      type="text"
-      placeholder="搜索日记..."
-      v-model="inputValue"
-      @keyup.enter="handleSearch"
-    >
+    <el-button @click="handleSearch" link>
+      <input
+        type="text"
+        placeholder="搜索日记..."
+        v-model="inputValue"
+        @keyup.enter="handleSearch"
+      >
+    </el-button>
     <!-- 搜索类型选择 -->
     <el-select
       v-model="searchType"

@@ -10,26 +10,25 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue')
     },
     {
-      path: '/diary',
-      name: 'diary',
-      component: () => import('@/views/DiaryView.vue') // 待开发
-    },
-    {
-      path: '/diary/:id',
-      name: 'diaryDetail',
-      component: () => import('@/views/diaryID.vue'),
-      props: true,
-    },
-    {
       path: '/plan',
       name: 'plan',
-      component: () => import('@/views/PlanView.vue'), // 待开发
+      component: () => import('@/views/PlanView.vue'),
       props: true
     },
     {
       path: '/share',
       name: 'share',
-      component: () => import('@/views/ShareView.vue') // 待开发
+      component: () => import('@/views/ShareView.vue')
+    },
+    {
+      path: '/diary',
+      name: 'diary',
+      component: () => import('@/views/DiaryView.vue')
+    },
+    {
+      path: '/diary/:id',
+      name: 'diary-detail',
+      component: () => import('@/views/DiaryView.vue')
     }
   ],
 })
