@@ -1,13 +1,11 @@
-package org.tinkerhub.offgo;
+package com.example.offgo3;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class OffGoApplication {
-
+public class OffGo3Application {
     public static void main(String[] args) {
-        SpringApplication.run(OffGoApplication.class, args);
+        SpringApplication.run(OffGo3Application.class, args);
     }
-
-}
+} 
