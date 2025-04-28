@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Plus, View } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Delete, View } from '@element-plus/icons-vue'
 import type { UploadProps, UploadUserFile } from 'element-plus'
 import axios from 'axios'
 
@@ -26,6 +26,43 @@ const fetchPublishedDiaries = async () => {
     }
   } catch (error: any) {
     ElMessage.error('获取已发布日记失败：' + error.message)
+  }
+}
+
+// 删除日记
+const deleteDiary = async (diaryId: number) => {
+  try {
+    // 先检查日记是否存在
+    const checkResponse = await axios.get(`http://localhost:8050/get/diary/${diaryId}`)
+    if (!checkResponse.data) {
+      ElMessage.error('日记不存在')
+      return
+    }
+
+    const confirmed = await ElMessageBox.confirm(
+      '确定要删除这篇日记吗？',
+      '警告',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    if (confirmed) {
+      const response = await axios.delete(`http://localhost:8050/api/diary/${diaryId}`)
+      if (response.status === 200) {
+        ElMessage.success('删除成功')
+        // 刷新日记列表
+        await fetchPublishedDiaries()
+      }
+    }
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      ElMessage.error('日记不存在')
+    } else {
+      ElMessage.error('删除失败：' + (error.response?.data || error.message))
+    }
   }
 }
 
@@ -203,6 +240,10 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
           <template #header>
             <div class="diary-header">
               <h3>{{ diary.title }}</h3>
+              <el-button type="danger" size="small" @click="deleteDiary(diary.id)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
             </div>
           </template>
           <div class="diary-content">

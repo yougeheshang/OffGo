@@ -22,7 +22,6 @@ import java.util.*;
 import java.util.Base64;
 
 @RestController
-@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class DiaryController {
     @Autowired
