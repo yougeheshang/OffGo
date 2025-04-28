@@ -9,6 +9,7 @@ import org.tinkerhub.offgo.entity.diary;
 @Configuration
 public interface DiaryRepository extends JpaRepository<diary, Integer> {
     diary findById(int id);
-    @Query("SELECT MAX(u.ID) FROM User u")
+    @Query("SELECT MAX(u.id) FROM diary u")
     int findMaxID();
+
 }

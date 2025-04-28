@@ -26,14 +26,12 @@
 
 <template>
   <div class="search-bar">
-    <el-button @click="handleSearch" link>
-      <input
-        type="text"
-        placeholder="搜索旅游目的地..."
-        v-model="inputValue"
-        @keyup.enter="handleSearch"
-      >
-    </el-button>
+    <input
+      type="text"
+      placeholder="搜索旅游目的地..."
+      v-model="inputValue"
+      @keyup.enter="handleSearch"
+    >
     <!-- 排序控件 -->
     <el-select
       v-model="sortField"

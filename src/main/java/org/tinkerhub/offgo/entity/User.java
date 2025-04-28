@@ -17,10 +17,13 @@
 package org.tinkerhub.offgo.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.tinkerhub.offgo.Repository.UserRepository;
 import org.tinkerhub.offgo.mysql_service.User_service;
+
+import java.util.Map;
 
 /**
  * @author <a href="mailto:chenxilzx1@gmail.com">theonefx</a>
@@ -35,7 +38,8 @@ public class User {
     private int ID;
     @Column(name = "password")
     private String password;
-
+    private int[] rate_id;
+    private int[] rate_value;
     public User() {
 
     }
@@ -71,5 +75,13 @@ public class User {
         this.username = name;
         this.password = password;
         this.ID = ID;
+    }
+    public String check_rate(int diary_id) {
+        for (int i=0;i<rate_id.length;i++) {
+            if (rate_id[i]==diary_id) {
+                return String.valueOf(rate_value[i]);
+            }
+        }
+        return "False";
     }
 }

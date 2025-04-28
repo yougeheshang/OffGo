@@ -7,6 +7,6 @@ import org.tinkerhub.offgo.entity.ImageEntity;
 @Configuration
 public interface ImageRepository extends JpaRepository<ImageEntity, Integer> {
     ImageEntity findById(int id);
-    @Query("SELECT MAX(u.ID) FROM User u")
+    @Query("SELECT MAX(u.id) FROM ImageEntity u")
     int findMaxID();
 }

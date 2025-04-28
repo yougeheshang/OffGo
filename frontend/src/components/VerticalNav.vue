@@ -52,7 +52,6 @@ const navItems: NavItem[] = [
       :key="item.name"
       :to="item.path"
       class="nav-item"
-      :class="{ 'is-active': $route.path === item.path }"
     >
       <el-tooltip
         effect="light"
@@ -98,50 +97,24 @@ const navItems: NavItem[] = [
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 60px;
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
+  color: 	#A9A9A9;
   text-decoration: none;
-  color: #606266;
-  padding: 10px 0;
+  padding: 8px;
+  margin: 4px;
+  transition: all 0.3s;
 
   &:hover {
-    background-color: #e8e8e8;
-    color: #409EFF;
-    .icon-placeholder {
-      color: #409EFF;
-    }
+    transform: scale(1.1);
   }
 
-  &.is-active {
-    background-color: #e8e8e8;
-    color: #409EFF;
-    .icon-placeholder {
-      color: #409EFF;
-    }
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background-color: #409EFF;
-    }
+  &.router-link-active {
+    color: 	#2c2c2c;
   }
+}
 
-  .icon-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    color: inherit;
-    transition: color 0.3s;
-  }
+.icon-placeholder {
+  height: 32px;
+  width: 32px;
 }
 
 </style>
