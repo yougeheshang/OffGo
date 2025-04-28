@@ -8,8 +8,10 @@ import org.tinkerhub.offgo.entity.ContentEntity;
 @Configuration
 public interface ContentRepository extends JpaRepository<ContentEntity, Long> {
     ContentEntity findById(int id);
-    @Query("SELECT MAX(u.ID) FROM User u")
+    @Query("SELECT MAX(u.id) FROM ContentEntity u")
     int findMaxID();
+
+
 
 
 }

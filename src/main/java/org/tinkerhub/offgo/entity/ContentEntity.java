@@ -14,4 +14,8 @@ public class ContentEntity {
         this.id = diaryID;
         this.content = diary_content;
     }
+
+    public String getContent() {
+        return content;
+    }
 }

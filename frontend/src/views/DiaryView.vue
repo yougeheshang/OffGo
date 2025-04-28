@@ -1,390 +1,190 @@
 <template>
-  <div class="diary-container">
-    <!-- 列表模式 -->
-    <div v-if="!route.params.id" class="diary-list">
-      <div class="diary-grid">
-        <div 
-          v-for="diary in diaries" 
-          :key="diary.id"
-          class="diary-card"
-          @click="goToDetail(diary.id)"
-        >
-          <div class="diary-card-header">
-            <h3>{{ diary.title }}</h3>
-            <div class="diary-meta">
-              <span class="time">{{ formatTime(diary.createTime) }}</span>
-              <span class="stats">
-                <el-icon><View /></el-icon> {{ diary.hot || 0 }}
-              </span>
-            </div>
-          </div>
-          <div class="diary-card-content">
-            <p>{{ diary.content }}</p>
-          </div>
-          <div class="diary-card-images" v-if="diary.images && diary.images.length > 0">
-            <el-image 
-              :src="getImageUrl(diary.images[0])"
-              fit="cover"
-              class="preview-image"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 详情模式 -->
-    <div v-else class="diary-detail-container">
-      <div class="diary-header">
-        <el-button @click="goBack" link>
-          <el-icon><ArrowLeft /></el-icon> 返回
-        </el-button>
-      </div>
-
-      <div v-if="diary" class="diary-content">
-        <h1>{{ diary.title }}</h1>
-        <div class="diary-meta">
-          <span class="time">{{ formatTime(diary.createTime) }}</span>
-          <span class="stats">
-            <el-icon><View /></el-icon> {{ diary.hot || 0 }}
-          </span>
-        </div>
-
-        <div class="content-text">
-          <pre>{{ diary.content }}</pre>
-        </div>
-
-        <div class="waterfall-gallery" v-if="diary.images && diary.images.length > 0">
-          <div 
-            v-for="(image, index) in diary.images" 
-            :key="index"
-            class="waterfall-item"
-          >
-            <el-image 
-              :src="getImageUrl(image)"
-              :preview-src-list="diary.images.map(img => getImageUrl(img))"
-              fit="cover"
-              class="diary-image"
-              @click="incrementHot"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="loading-state">
-        <el-empty description="日记加载中..." v-if="loading" />
-        <el-empty description="未找到日记" v-else />
-      </div>
+  <header class="search-header">
+    <DiarySearchBar
+      @search="handleSearch"
+      @sort-change="handleSortChange"
+    />
+    <UserPanel />
+  </header>
+  <!-- 瀑布流容器 -->
+  <div class="masonry-container">
+    <div
+      v-for="card in cards"
+      :key="card.id"
+      class="masonry-item"
+      @click="handleCardClick(card.id)"
+    >
+      <h3>{{ card.title }}</h3>
+      <p>{{ card.description }}</p>
+      <p>热度: {{ card.hot }}</p>
+      <p>评分: {{ card.rating }}</p>
+      <p>目的地: {{ card.destination }}</p>
+      <!-- 显示图片 -->
+      <img v-if="card.imageUrl" :src="card.imageUrl" alt="Diary Image">
+      <div v-else>暂无图片</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft, View } from '@element-plus/icons-vue'
-import axios from 'axios'
-import { IMAGE_BASE_URL } from '../config'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import DiarySearchBar from '@/components/DiarySearchBar.vue';
+import UserPanel from '@/components/UserPanel.vue';
+import axios from "axios";
 
-interface Diary {
-  id: number
-  title: string
-  content: string
-  images: string[]
-  hot: number
-  createTime: string
+interface DiaryCard {
+  id: number;
+  title: string;
+  description: string;
+  imageIds: number[];
+  hot: number;
+  rating: number;
+  destination: string;
+  imageUrl?: string;
 }
 
-const router = useRouter()
-const route = useRoute()
-const diary = ref<Diary | null>(null)
-const diaries = ref<Diary[]>([])
-const loading = ref(true)
+const router = useRouter();
+const cards = ref<DiaryCard[]>([]);
 
-const getImageUrl = (url: string) => {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  // 如果url已经包含/uploads/，去掉重复的部分
-  if (url.startsWith('/uploads/')) {
-    return `${IMAGE_BASE_URL}${url.substring('/uploads/'.length)}`
-  }
-  return `${IMAGE_BASE_URL}${url}`
-}
+// 请求参数
+const searchParams = ref({
+  keyword: '',
+  searchType: 'name',
+  sortField: 1, // 初始默认按热度排序，设为1
+  sortOrder: 'desc'
+});
 
-// 获取日记列表
-const fetchDiaries = async () => {
+const fetchCards = async () => {
   try {
-    loading.value = true
-    const response = await axios.get<Diary[]>('/api/diaries')
-    diaries.value = response.data.map(diary => ({
-      ...diary,
-      images: diary.images.map(img => getImageUrl(img))
-    }))
-    loading.value = false
-  } catch (error: any) {
-    if (error.response) {
-      ElMessage.error(`获取日记列表失败: ${error.response.data.message || '服务器错误'}`)
-    } else if (error.request) {
-      ElMessage.error('网络错误，请检查网络连接')
-    } else {
-      ElMessage.error('获取日记列表失败，请重试')
-    }
-    loading.value = false
-  }
-}
-
-// 获取日记详情
-const fetchDiary = async () => {
-  try {
-    loading.value = true
-    const diaryId = Number(route.params.id)
-    console.log('正在获取日记详情，ID:', diaryId)
-    
-    if (!diaryId || isNaN(diaryId)) {
-      ElMessage.error('无效的日记ID')
-      loading.value = false
-      return
-    }
-
-    const response = await axios.get<Diary>(`/api/diaries/${diaryId}`)
-    console.log('获取到的日记详情:', response.data)
-    
-    if (!response.data) {
-      ElMessage.error('未找到日记')
-      loading.value = false
-      return
-    }
-
-    diary.value = {
-      ...response.data,
-      images: (response.data.images || []).map(img => getImageUrl(img))
-    }
-    loading.value = false
-  } catch (error: any) {
-    console.error('获取日记详情失败:', error)
-    if (error.response?.status === 404) {
-      ElMessage.error('未找到日记')
-    } else if (error.response) {
-      ElMessage.error(`获取日记详情失败: ${error.response.data.message || '服务器错误'}`)
-    } else if (error.request) {
-      ElMessage.error('网络错误，请检查网络连接')
-    } else {
-      ElMessage.error('获取日记详情失败，请重试')
-    }
-    loading.value = false
-  }
-}
-
-// 增加热度
-const incrementHot = async () => {
-  if (!diary.value) return
-  
-  try {
-    await axios.post(`/api/diaries/${diary.value.id}/hot`)
-    if (diary.value) {
-      diary.value.hot = (diary.value.hot || 0) + 1
-    }
+    const response = await axios.get('http://localhost:8050/get/diaries', {
+      params: searchParams.value
+    });
+    console.log('后端返回的数据:', response.data);
+    const fetchedCards = response.data as DiaryCard[];
+    const cardsWithImages = await Promise.all(fetchedCards.map(async (card) => {
+      if (card.imageIds && card.imageIds.length > 0) {
+        const imageUrl = await getImageUrl(card.imageIds[0]);
+        return { ...card, imageUrl };
+      }
+      return card;
+    }));
+    cards.value = cardsWithImages;
   } catch (error) {
-    console.error('增加热度失败:', error)
+    console.error('获取日记数据失败:', error);
   }
-}
+};
 
-// 跳转到详情页
-const goToDetail = (id: number) => {
-  console.log('跳转到日记详情，ID:', id)
-  router.push(`/diary/${id}`)
-}
+// 搜索
+const handleSearch = (params: { keyword: string; type: string }) => {
+  searchParams.value.keyword = params.keyword;
+  searchParams.value.searchType = params.type;
+  fetchCards();
+};
 
-// 返回上一页
-const goBack = () => {
-  if (route.params.id) {
-    router.push('/diary')
-  } else {
-    router.push('/')
+// 处理排序
+// 与后端接轨
+const handleSortChange = (params: {
+  field: 'hot' | 'rating';
+  order: 'asc' | 'desc';
+}) => {
+  searchParams.value.sortOrder = params.order;
+  if (params.field === 'hot') {
+    searchParams.value.sortField = 1;
+  } else if (params.field === 'rating') {
+    searchParams.value.sortField = 0;
   }
-}
+  fetchCards();
+};
 
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString()
-}
-
-// 监听路由参数变化
-watch(() => route.params.id, (newId) => {
-  if (newId) {
-    fetchDiary()
-  } else {
-    fetchDiaries()
+// 点击卡片（热度更新）
+// 后端替代
+const handleCardClick = async (cardId: number) => {
+  try {
+    cards.value = cards.value.map(card =>
+      card.id === cardId? { ...card, hot: card.hot + 1 } : card
+    );
+    console.log(cardId);
+    router.push(`/diary/${cardId}`);
+  } catch (error) {
+    console.error('点击记录失败:', error);
   }
-})
+};
 
-onMounted(() => {
-  if (route.params.id) {
-    fetchDiary()
-  } else {
-    fetchDiaries()
+// 根据图片序号获取图片 URL
+const getImageUrl = async (imageId: number) => {
+  try {
+    const response = await axios.get(`http://localhost:8050/getimage/${imageId}`, {
+      responseType: 'blob'
+    });
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('获取图片失败:', error);
+    return '';
   }
-})
+};
+
+// 生命周期
+onMounted(fetchCards);
 </script>
 
 <style scoped>
-.diary-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+.search-header {
+  width: calc(100% - 70px);
+  display: flex;
+  position: fixed;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0px 15px 10px;
+  margin-left: 70px;
+  box-shadow: 0px 5px 5px -1px #DCDCDC;
+  z-index: 10;
 }
 
-/* 列表模式样式 */
-.diary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+/* Pinterest瀑布流布局 */
+.masonry-container {
+  margin-left: 70px;
+  margin-top: 70px; /* 增加上边距，确保卡片在搜索栏下方 */
+  columns: 4; /* 简化列设置，让浏览器自动计算合适宽度 */
+  column-gap: 20px;
 }
 
-.diary-card {
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 20px;
   background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.3s;
+  width: 100%; /* 让卡片占满列宽 */
+  max-width: 300px; /* 设置最大宽度 */
+  padding: 15px; /* 增加内边距 */
 
   &:hover {
     transform: translateY(-5px);
   }
 }
 
-.diary-card-header {
-  margin-bottom: 15px;
+h3 {
+  margin-bottom: 8px;
+  color: #696969;
 }
 
-.diary-card-header h3 {
-  margin: 0 0 10px 0;
-  color: #303133;
-}
-
-.diary-card-content {
-  color: #606266;
-  margin-bottom: 15px;
-  line-height: 1.6;
+p {
+  font-size: 0.9em;
+  color: #666;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.diary-card-images {
-  height: 200px;
-  overflow: hidden;
-  border-radius: 4px;
-}
-
-.preview-image {
+img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 详情模式样式 */
-.diary-detail-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.diary-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.diary-content {
-  background: white;
+  height: auto;
+  margin-top: 10px;
   border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
-}
-
-h1 {
-  margin: 0 0 20px 0;
-  color: #303133;
-}
-
-.diary-meta {
-  display: flex;
-  justify-content: space-between;
-  color: #909399;
-  margin-bottom: 20px;
-}
-
-.stats {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.content-text {
-  line-height: 1.8;
-  color: #606266;
-  margin-bottom: 20px;
-  white-space: pre-wrap;
-  font-size: 16px;
-}
-
-.content-text pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-family: inherit;
-  margin: 0;
-  padding: 0;
-}
-
-.waterfall-gallery {
-  column-count: 3;
-  column-gap: 16px;
-  margin-top: 20px;
-}
-
-.waterfall-item {
-  break-inside: avoid;
-  margin-bottom: 16px;
-}
-
-.diary-image {
-  width: 100%;
-  border-radius: 4px;
-  transition: transform 0.3s;
-  cursor: pointer;
-  display: block;
-
-  &:hover {
-    transform: scale(1.02);
-  }
-}
-
-.loading-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 400px;
-}
-
-@media (max-width: 768px) {
-  .waterfall-gallery {
-    column-count: 2;
-  }
-  .diary-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .waterfall-gallery {
-    column-count: 1;
-  }
-  .diary-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
