@@ -69,7 +69,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>org.tinkerhub.offgo.OffGoApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>

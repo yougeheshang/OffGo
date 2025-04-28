@@ -7,9 +7,11 @@ import org.tinkerhub.offgo.Repository.ImageRepository;
 import org.tinkerhub.offgo.Repository.UserRepository;
 import org.tinkerhub.offgo.Repository.DiaryRepository;
 import org.tinkerhub.offgo.entity.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
 
 
 @Service
@@ -97,21 +99,26 @@ public class Diary_service {
         }
         return diaries;
     }
-    public List<DiaryCard> getDiaryCards(int i) {
+    public List<DiaryCard> getDiaryCards(int sortField, String sortOrder) {
         List<diary> diaries = getAllDiaries();
-        switch (i) {
+        switch (sortField) {
             case 0:
-                diaries= order_diaries_rating(diaries);
+                diaries = order_diaries_rating(diaries);
                 break;
             case 1:
-                diaries= order_diaries_hot(diaries);
+                diaries = order_diaries_hot(diaries);
                 break;
             default:
                 break;
         }
+        
+        // 如果是升序，反转列表
+        if ("asc".equalsIgnoreCase(sortOrder)) {
+            java.util.Collections.reverse(diaries);
+        }
+        
         List<DiaryCard> diaryCards = new ArrayList<>();
         for (diary d : diaries) {
-            // 假设这里需要根据 imageIDs 从其他地方获取图片路径列表
             DiaryCard card = new DiaryCard(
                     d.getId(),
                     d.getTitle(),
@@ -151,5 +158,31 @@ public class Diary_service {
             return convertToDiaryData(d);
         }
         return null;
+    }
+
+    @Transactional
+    public void deleteDiary(int diaryId) {
+        try {
+            // 先获取日记对象
+            diary diaryToDelete = diaryRepository.findById(diaryId);
+            if (diaryToDelete == null) {
+                throw new RuntimeException("日记不存在");
+            }
+
+            // 删除关联的图片
+            if (diaryToDelete.getImage() != null) {
+                for (int imageId : diaryToDelete.getImage()) {
+                    imageRepository.deleteById(imageId);
+                }
+            }
+
+            // 删除关联的内容
+            contentRepository.deleteById(diaryToDelete.getContent());
+
+            // 最后删除日记
+            diaryRepository.deleteById(diaryId);
+        } catch (Exception e) {
+            throw new RuntimeException("删除日记失败: " + e.getMessage());
+        }
     }
 }

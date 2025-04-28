@@ -27,13 +27,14 @@ const searchParams = ref({
 const fetchCards = async () => {
   try {
     const query = new URLSearchParams({
-      ...searchParams.value,
-      pageSize: '200' // 一次性获取所有数据
+      keyword: searchParams.value.keyword,
+      sortField: searchParams.value.sortField === 'hot' ? '1' : '0',
+      sortOrder: searchParams.value.sortOrder
     }).toString()
 
-    const response = await fetch(`/api/travel-cards?${query}`)
+    const response = await fetch(`http://localhost:8050/get/diaries?${query}`)
     const data = await response.json()
-    cards.value = data.items
+    cards.value = data
   } catch (error) {
     console.error('数据获取失败:', error)
   }

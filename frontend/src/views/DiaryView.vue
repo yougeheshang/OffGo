@@ -57,11 +57,10 @@ const searchParams = ref({
 
 const fetchCards = async () => {
   try {
-    const response = await axios.get('http://localhost:8050/get/diaries', {
-      params: searchParams.value
-    });
-    console.log('后端返回的数据:', response.data);
-    const fetchedCards = response.data as DiaryCard[];
+    const response = await fetch(`http://localhost:8050/get/diaries?keyword=${searchParams.value.keyword}&sortField=${searchParams.value.sortField}`);
+    const data = await response.json();
+    console.log('后端返回的数据:', data);
+    const fetchedCards = data as DiaryCard[];
     const cardsWithImages = await Promise.all(fetchedCards.map(async (card) => {
       if (card.imageIds && card.imageIds.length > 0) {
         const imageUrl = await getImageUrl(card.imageIds[0]);
@@ -83,12 +82,10 @@ const handleSearch = (params: { keyword: string; type: string }) => {
 };
 
 // 处理排序
-// 与后端接轨
 const handleSortChange = (params: {
   field: 'hot' | 'rating';
   order: 'asc' | 'desc';
 }) => {
-  searchParams.value.sortOrder = params.order;
   if (params.field === 'hot') {
     searchParams.value.sortField = 1;
   } else if (params.field === 'rating') {

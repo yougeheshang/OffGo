@@ -1,19 +1,30 @@
 package org.tinkerhub.offgo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.tinkerhub.offgo.entity.*;
 import org.tinkerhub.offgo.mysql_service.Diary_service;
 import org.tinkerhub.offgo.mysql_service.User_service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.io.*;
 import java.util.*;
+import java.util.Base64;
 
 @RestController
-public class diarycontroller {
+@RequestMapping("/api")
+@CrossOrigin(origins = "*")
+public class DiaryController {
     @Autowired
     private Diary_service diaryService;
     @Autowired
@@ -86,16 +97,37 @@ public class diarycontroller {
     }
 
     @RequestMapping("/saveImage")
-    public void saveImage(@RequestParam byte[] imageData) {
-        int imageID = diaryService.find_image_max_id() + 1;
-        String imagePath = IMAGE_STORAGE_DIR + imageID + "jpg";
-        try (FileOutputStream fos = new FileOutputStream(imagePath)) {
-            fos.write(imageData);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public int saveImage(@RequestParam String imageData) {
+        try {
+            if (imageData == null || imageData.isEmpty()) {
+                throw new RuntimeException("图片数据为空");
+            }
+
+            // 解码Base64数据
+            byte[] imageBytes = Base64.getDecoder().decode(imageData);
+
+            int imageID = diaryService.find_image_max_id() + 1;
+            String imagePath = IMAGE_STORAGE_DIR + imageID + ".jpg";
+            
+            // 确保目录存在
+            File directory = new File(IMAGE_STORAGE_DIR);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            // 保存文件
+            try (FileOutputStream fos = new FileOutputStream(imagePath)) {
+                fos.write(imageBytes);
+            }
+
+            // 保存到数据库
+            ImageEntity imageEntity = new ImageEntity(imageID, imagePath);
+            diaryService.saveImage(imageEntity);
+
+            return imageID;
+        } catch (Exception e) {
+            throw new RuntimeException("保存图片失败: " + e.getMessage());
         }
-        int maxID = diaryService.find_image_max_id() + 1;
-        ImageEntity imageEntity = new ImageEntity(maxID, imagePath);
     }
 
     @RequestMapping("/test_add")
@@ -213,10 +245,7 @@ public class diarycontroller {
                                       @RequestParam(required = false, defaultValue = "name") String searchType,
                                       @RequestParam(required = false, defaultValue = "hot") int sortField,
                                       @RequestParam(required = false, defaultValue = "desc") String sortOrder) {
-
-
-        return diaryService.getDiaryCards(sortField);
-
+        return diaryService.getDiaryCards(sortField, sortOrder);
     }
 
     @RequestMapping("/get/diary/{ID}")
@@ -248,6 +277,17 @@ public class diarycontroller {
             return "success";
         }
         return "fail";
+    }
+
+    @DeleteMapping("/diary/{id}")
+    public ResponseEntity<?> deleteDiary(@PathVariable int id) {
+        try {
+            diaryService.deleteDiary(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("删除日记失败: " + e.getMessage());
+        }
     }
 }
 

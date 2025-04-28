@@ -14,10 +14,11 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "@eslint/config-array": "^0.20.0",
     "@eslint/object-schema": "^2.1.6",
     "axios": "^1.6.2",
-    "element-plus": "^2.4.4",
+    "element-plus": "^2.9.9",
     "glob": "^11.0.1",
     "inflight": "^1.0.6",
     "pinia": "^3.0.1",
