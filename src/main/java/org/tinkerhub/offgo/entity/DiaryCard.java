@@ -1,81 +1,38 @@
 package org.tinkerhub.offgo.entity;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.util.List;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DiaryCard {
-    private int id;
+    private Integer id;
     private String title;
     private String description;
-    private int[] images;
-    private int hot;
-    private double rating;
     private String destination;
+    private Integer hot;
+    private Double rating;
+    private Integer userId;
+    private String imageIds;
+    private List<String> tags;
 
-    // 构造函数
-    public DiaryCard(int id, String title, String description, int[] images, int hot, double rating, String destination) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.images = images;
-        this.hot = hot;
-        this.rating = rating;
-        this.destination = destination;
-    }
-
-    // Getter 和 Setter 方法
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int[] getImages() {
-        return images;
-    }
-
-    public void setImages(int[] images) {
-        this.images = images;
-    }
-
-    public int getHot() {
-        return hot;
-    }
-
-    public void setHot(int hot) {
-        this.hot = hot;
-    }
-
-    public double getRating() {
-        return rating;
-    }
-
-    public void setRating(int rating) {
-        this.rating = rating;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getDestination() { return destination; }
+    public void setDestination(String destination) { this.destination = destination; }
+    public Integer getHot() { return hot; }
+    public void setHot(Integer hot) { this.hot = hot; }
+    public Double getRating() { return rating; }
+    public void setRating(Double rating) { this.rating = rating; }
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
+    public String getImageIds() { return imageIds; }
+    public void setImageIds(String imageIds) { this.imageIds = imageIds; }
 }

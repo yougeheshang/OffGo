@@ -1,101 +1,52 @@
 package org.tinkerhub.offgo.entity;
+
 import jakarta.persistence.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.tinkerhub.offgo.Repository.UserRepository;
-import org.tinkerhub.offgo.mysql_service.User_service;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.List;
-
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "diary")
-public class diary {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class Diary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    
     private String title;
     private String description;
-    private int[] image;
+    
+    @Column(name = "content")
+    private Integer contentId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "content", referencedColumnName = "id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private ContentEntity content;
+    
+    @Column(name = "image")
+    private String image;
+    
     private Integer hot;
     private String destination;
-    private double rating;
-    private int rate_sum;
-    private int rate_counts;
+    private Double rating;
+    private Integer rate_sum;
+    private Integer rate_counts;
+    private Integer userID;
+    
+    @Column(name = "video_id")
+    private Long videoId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "video_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Video video;
 
-    private int userID;
-
-    private int content;
-
-    public diary() {}
-    public diary(Integer id, String title, int user, String description, int content, int[] image,String destination) {
-        this.id = id;
-        this.title = title;
-        this.userID = user;
-        this.description = description;
-        this.content = content;
-        this.image = image;
-        this.rating = 0.0;
-        this.rate_sum = 0;
-        this.rate_counts = 0;
-        this.hot = 0;
-        this.destination = destination;
-    }
-    public diary(Integer id, String title, int user, String description, int content,String destination) {
-        this.id = id;
-        this.title = title;
-        this.hot=0;
-        this.rating=0;
-        this.rate_sum=0;
-        this.rate_counts=0;
-        this.userID = user;
-        this.description = description;
-        this.content = content;
-        this.image=new int[0];
-        this.destination=destination;
-    }
-    public int getHot() {
-        return hot;
-    }
-
-    public double getRating() {
-        return rating;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public int[] getImage() {
-        return image;
-    }
-
-    public int getRate_sum() {
-        return rate_sum;
-    }
-    public int getRate_counts() {
-        return rate_counts;
-    }
-    public int getUserID() {
-        return userID;
-    }
-
-    public int getContent() {
-        return content;
-    }
-
-    public void setHot(int i) {
-        hot = i;
-    }
-}
+    @Column(name = "tags")
+    private String tags; // 存储标签，用逗号分隔
+} 

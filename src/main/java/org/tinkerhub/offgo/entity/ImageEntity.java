@@ -1,8 +1,6 @@
 package org.tinkerhub.offgo.entity;
 import jakarta.persistence.*;
 
-import java.nio.file.Path;
-
 @Entity
 @Table(name = "image")
 public class ImageEntity {
@@ -27,5 +25,9 @@ public class ImageEntity {
 
     public String getImagepath() {
         return imagepath;
+    }
+
+    public void setImagepath(String imagepath) {
+        this.imagepath = imagepath;
     }
 }

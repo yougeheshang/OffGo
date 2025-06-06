@@ -18,7 +18,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5174,
+    port: 8051,
     host: true,
     proxy: {
       '/api': {
@@ -26,6 +26,22 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path,
         secure: false
+      },
+      '/images/attraction': {
+        target: 'http://localhost:8050',
+        changeOrigin: true,
+        rewrite: (path) => path,
+        secure: false
+      }
+    }
+  },
+  publicDir: 'public',
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.webp'],
+  build: {
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name].[hash][extname]'
       }
     }
   }

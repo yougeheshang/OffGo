@@ -21,10 +21,12 @@
     "element-plus": "^2.9.9",
     "glob": "^11.0.1",
     "inflight": "^1.0.6",
+    "jszip": "^3.10.1",
     "pinia": "^3.0.1",
     "rimraf": "^6.0.1",
     "vue": "^3.2.13",
-    "vue-router": "^4.0.3"
+    "vue-router": "^4.0.3",
+    "vue3-masonry": "^0.1.11"
   },
   "devDependencies": {
     "@types/node": "^22.13.9",

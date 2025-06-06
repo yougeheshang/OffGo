@@ -9,7 +9,7 @@ import axios from 'axios'
 const app = createApp(App)
 
 // 配置axios
-axios.defaults.baseURL = 'http://localhost:8070'
+axios.defaults.baseURL = 'http://localhost:8050'
 axios.defaults.headers.post['Content-Type'] = 'multipart/form-data'
 
 // 注册所有图标

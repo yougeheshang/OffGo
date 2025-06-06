@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
       :key="item.name"
       :to="item.path"
       class="nav-item"
+      :class="{ 'router-link-active': $route.meta.activePath === item.path }"
     >
       <el-tooltip
         effect="light"

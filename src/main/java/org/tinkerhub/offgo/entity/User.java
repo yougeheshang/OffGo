@@ -17,37 +17,87 @@
 package org.tinkerhub.offgo.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.tinkerhub.offgo.Repository.UserRepository;
-import org.tinkerhub.offgo.mysql_service.User_service;
-
-import java.util.Map;
+import lombok.Data;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:chenxilzx1@gmail.com">theonefx</a>
  */
 @Entity
 @Table(name = "users")
+@Data
 public class User {
     @Column(name = "name")
     private String username;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int ID;
+    private int id;
     @Column(name = "password")
     private String password;
-    private int[] rate_id;
-    private int[] rate_value;
-    public User() {
+    @Column(name = "role")
+    private String role = "USER";  // 默认为普通用户
+    
+    @Column(name = "ai_video_url")
+    private String aiVideoUrl;  // 添加AI视频URL字段
+    
+    @ElementCollection
+    @CollectionTable(name = "user_rate_ids", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "rate_id")
+    private List<Integer> rate_id;
+    
+    @ElementCollection
+    @CollectionTable(name = "user_rate_values", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "rate_value")
+    private List<Integer> rate_value;
 
+    @Column(name = "interests")
+    private String interests;
+
+    public User() {
+        this.rate_id = new ArrayList<>();
+        this.rate_value = new ArrayList<>();
+        this.role = "USER";
+        this.aiVideoUrl = "";
+    }
+
+    public User(String name, String password, int id) {
+        this.username = name;
+        this.password = password;
+        this.id = id;
+        this.rate_id = new ArrayList<>();
+        this.rate_value = new ArrayList<>();
+        this.role = "USER";
+        this.aiVideoUrl = "";
+    }
+
+    public User(String name, String password, int id, String role) {
+        this.username = name;
+        this.password = password;
+        this.id = id;
+        this.rate_id = new ArrayList<>();
+        this.rate_value = new ArrayList<>();
+        this.role = role;
+        this.aiVideoUrl = "";
+    }
+
+    public boolean isAdmin() {
+        return "ADMIN".equals(this.role);
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public void setPassword(String password) {
         this.password = password;
     }
     public boolean checkPassword(String password) {
+        System.out.println("Checking password - Input: " + password + ", Stored: " + this.password);
         return password.equals(this.password);
     }
     public boolean changePassword(String oldPassword, String newPassword) {
@@ -68,20 +118,56 @@ public class User {
     }
 
     public Integer getID() {
-        return ID;
+        return id;
     }
 
-    public User(String name, String password,int ID) {
-        this.username = name;
-        this.password = password;
-        this.ID = ID;
-    }
     public String check_rate(int diary_id) {
-        for (int i=0;i<rate_id.length;i++) {
-            if (rate_id[i]==diary_id) {
-                return String.valueOf(rate_value[i]);
+        if (rate_id == null || rate_value == null || rate_id.isEmpty() || rate_value.isEmpty()) {
+            return "False";
+        }
+        for (int i = 0; i < rate_id.size(); i++) {
+            if (rate_id.get(i) == diary_id) {
+                return String.valueOf(rate_value.get(i));
             }
         }
         return "False";
+    }
+
+    public List<Integer> getRate_id() {
+        if (rate_id == null) {
+            rate_id = new ArrayList<>();
+        }
+        return rate_id;
+    }
+
+    public void setRate_id(List<Integer> rate_id) {
+        this.rate_id = rate_id != null ? rate_id : new ArrayList<>();
+    }
+
+    public List<Integer> getRate_value() {
+        if (rate_value == null) {
+            rate_value = new ArrayList<>();
+        }
+        return rate_value;
+    }
+
+    public void setRate_value(List<Integer> rate_value) {
+        this.rate_value = rate_value != null ? rate_value : new ArrayList<>();
+    }
+
+    public String getAiVideoUrl() {
+        return aiVideoUrl != null ? aiVideoUrl : "";
+    }
+
+    public void setAiVideoUrl(String aiVideoUrl) {
+        this.aiVideoUrl = aiVideoUrl != null ? aiVideoUrl : "";
+    }
+
+    public String getInterests() {
+        return interests;
+    }
+
+    public void setInterests(String interests) {
+        this.interests = interests;
     }
 }
