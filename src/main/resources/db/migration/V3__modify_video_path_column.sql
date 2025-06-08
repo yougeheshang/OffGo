@@ -1,0 +1,1 @@
+ALTER TABLE video MODIFY COLUMN video_path TEXT; 

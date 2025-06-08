@@ -1,0 +1,1 @@
+ALTER TABLE users MODIFY COLUMN ai_video_url TEXT; 
